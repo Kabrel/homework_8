@@ -15,7 +15,8 @@ class DataBase:
         self.__port = port
         self.__name = name
         self._connect_to_db()
-        #self.import_db()
+        self.import_db()
+        self.__current_id = 0
 
     def _connect_to_db(self):
         self.__client = MongoClient(self.__ip_adr, self.__port)
@@ -60,11 +61,30 @@ class DataBase:
             else:
                 pass
 
+    def __get_all(self):
+        self.all_jobs = self.__collection.find()[:]
+
+    def __make_job_data(self, j_id):
+        data = self.all_jobs[j_id]
+        no_data = "Не указано"
+        name = data["name"]
+        empl = data["employer"]
+        city = data["city"]
+        metro = data["metro"] if data["metro"] else no_data
+        sal_min = data["salary_min"] if data["salary_min"] else no_data
+        sal_max = data["salary_max"] if data["salary_max"] else no_data
+        link = data["link"]
+        day = data["vac_day"]
+        month = data["vac_month"]
+        text = (f'Название вакансии: {name}\nРаботодатель: {empl}\nГород: {city}\nМетро: {metro}\n'
+                f'Минимальная зарплата: {sal_min}\nМаксимальная зарплата: {sal_max}\nСсылка на вакансию: {link}\n'
+                f'Дата размещения: {day}.{month}\n')
+        return text
+
     def show_all(self):
-        for i, job in enumerate(self.__collection.find()):
-            print(job)
-            if i == 2:
-                break
+        self.__get_all()
+        self.__current_id = 0
+        return self.__make_job_data(self.__current_id)
 
     def search_data(self, search_type: str, data):
         pass
@@ -85,8 +105,8 @@ class DataBase:
         pass
 
     def import_db(self, f_name='jobs.json'):
-        data = self.__collection.find()
-        if data.matched_count <= 1:
+        count = self.__collection.count_documents({})
+        if count <= 1:
             with open(f_name) as file:
                 file_data = json.load(file)
             if isinstance(file_data, list):
@@ -97,4 +117,4 @@ class DataBase:
 
 if __name__ == '__main__':
     db = DataBase(config.db_ip, config.db_port, config.db_name)
-    db.show_all()
+    print(db.show_all())
