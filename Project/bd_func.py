@@ -17,6 +17,7 @@ class DataBase:
         self._connect_to_db()
         self.import_db()
         self.__current_id = 0
+        self.__count = 0
 
     def _connect_to_db(self):
         self.__client = MongoClient(self.__ip_adr, self.__port)
@@ -55,7 +56,7 @@ class DataBase:
 
     def __create_id(self) -> str:
         while True:
-            vac_id = str(randint(100, 5000))
+            vac_id = str(randint(1, 500000))
             if not self.__collection.find({'_id': vac_id}):
                 return vac_id
             else:
@@ -63,6 +64,7 @@ class DataBase:
 
     def __get_all(self):
         self.all_jobs = self.__collection.find()[:]
+        self.__count = self.__collection.count_documents({})
 
     def __make_job_data(self, j_id):
         data = self.all_jobs[j_id]
@@ -71,14 +73,19 @@ class DataBase:
         empl = data["employer"]
         city = data["city"]
         metro = data["metro"] if data["metro"] else no_data
-        sal_min = data["salary_min"] if data["salary_min"] else no_data
-        sal_max = data["salary_max"] if data["salary_max"] else no_data
+        if data['salary_max'] is not None and data['salary_min'] is not None:
+            salary = f"от {data['salary_min']} до {data['salary_max']} руб."
+        elif data['salary_min'] is not None:
+            salary = f"от {data['salary_min']} руб."
+        elif data['salary_max'] is not None:
+            salary = f"до {data['salary_max']} руб."
+        else:
+            salary = no_data
         link = data["link"]
-        day = data["vac_day"]
-        month = data["vac_month"]
+        day = data["vac_day"] if data["vac_day"] else 'Не известно'
+        month = data["vac_month"] if data["vac_month"] else 'Не известно'
         text = (f'Название вакансии: {name}\nРаботодатель: {empl}\nГород: {city}\nМетро: {metro}\n'
-                f'Минимальная зарплата: {sal_min}\nМаксимальная зарплата: {sal_max}\nСсылка на вакансию: {link}\n'
-                f'Дата размещения: {day}.{month}\n')
+                f'Зарплата: {salary}\nСсылка на вакансию: {link}\nДата размещения: {day}.{month}\n')
         return text
 
     def show_all(self):
@@ -86,23 +93,81 @@ class DataBase:
         self.__current_id = 0
         return self.__make_job_data(self.__current_id)
 
-    def search_data(self, search_type: str, data):
-        pass
+    def show_next(self):
+        if self.__current_id < (self.__count - 1):
+            self.__current_id += 1
+        else:
+            self.__current_id = 0
+        return self.__make_job_data(self.__current_id)
+
+    def show_prev(self):
+        if self.__current_id > 0:
+            self.__current_id -= 1
+        else:
+            self.__current_id = self.__count - 1
+        return self.__make_job_data(self.__current_id)
+
+    def search_data(self, search_type: str, data: str):
+        match search_type:
+            case 'by_salary':
+                return self.__search_by_salary(data)
+            case 'by_name':
+                return self.__search_by_names(data)
+            case 'by_employer':
+                return self.__search_by_employer(data)
+            case 'by_city':
+                return self.__search_by_city(data)
+            case 'by_metro':
+                return self.__search_by_metro(data)
 
     def __search_by_salary(self, value: str):
-        pass
+        val = int(value)
+        search = {'$or': [{'salary_min': {'$gte': val}}, {'salary_max': {'$gte': val}}]}
+        self.all_jobs = self.__collection.find(search)[:]
+        self.__count = self.__collection.count_documents(search)
+        self.__current_id = 0
+        return self.__make_job_data(self.__current_id)
 
-    def __search_by_name(self, value: str):
-        pass
+    def __search_by_names(self, value: str):
+        val = value
+        val_cap = value.capitalize()
+        val_low = value.lower()
+        val_up = value.upper()
+        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/', f'/{val_low}/', f'/{val_up}/']}}
+        self.all_jobs = self.__collection.find(search)[:]
+        self.__count = self.__collection.count_documents(search)
+        self.__current_id = 0
+        return self.__make_job_data(self.__current_id)
 
     def __search_by_employer(self, value: str):
-        pass
+        val = value
+        val_cap = value.capitalize()
+        val_low = value.lower()
+        val_up = value.upper()
+        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/', f'/{val_low}/', f'/{val_up}/']}}
+        self.all_jobs = self.__collection.find(search)[:]
+        self.__count = self.__collection.count_documents(search)
+        self.__current_id = 0
+        return self.__make_job_data(self.__current_id)
 
     def __search_by_city(self, value: str):
-        pass
+        val = value
+        val_cap = value.capitalize()
+        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/']}}
+        self.all_jobs = self.__collection.find(search)[:]
+        self.__count = self.__collection.count_documents(search)
+        self.__current_id = 0
+        return self.__make_job_data(self.__current_id)
 
     def __search_by_metro(self, value: str):
-        pass
+        val = value
+        val_cap = value.capitalize()
+        val_low = value.lower()
+        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/', f'/{val_low}/']}}
+        self.all_jobs = self.__collection.find(search)[:]
+        self.__count = self.__collection.count_documents(search)
+        self.__current_id = 0
+        return self.__make_job_data(self.__current_id)
 
     def import_db(self, f_name='jobs.json'):
         count = self.__collection.count_documents({})
@@ -115,6 +180,8 @@ class DataBase:
                 self.__collection.insert_one(file_data)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # debug
     db = DataBase(config.db_ip, config.db_port, config.db_name)
-    print(db.show_all())
+    print(db.search_data('by_salary', '150000'))
+    print(db.show_next())
+    print(db.show_prev())
