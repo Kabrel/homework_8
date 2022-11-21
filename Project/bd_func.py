@@ -69,6 +69,7 @@ class DataBase:
     def __make_job_data(self, j_id):
         data = self.all_jobs[j_id]
         no_data = "Не указано"
+        job_id = data["_id"]
         name = data["name"]
         empl = data["employer"]
         city = data["city"]
@@ -85,7 +86,7 @@ class DataBase:
         day = data["vac_day"] if data["vac_day"] else 'Не известно'
         month = data["vac_month"] if data["vac_month"] else 'Не известно'
         text = (f'Название вакансии: {name}\nРаботодатель: {empl}\nГород: {city}\nМетро: {metro}\n'
-                f'Зарплата: {salary}\nСсылка на вакансию: {link}\nДата размещения: {day}.{month}\n')
+                f'Зарплата: {salary}\nСсылка на вакансию: {link}\nДата размещения: {day}.{month}\nid:{job_id}')
         return text
 
     def show_all(self):
@@ -182,6 +183,6 @@ class DataBase:
 
 if __name__ == '__main__':  # debug
     db = DataBase(config.db_ip, config.db_port, config.db_name)
-    print(db.search_data('by_salary', '150000'))
+    print(db.search_data('by_salary', '15000'))
     print(db.show_next())
     print(db.show_prev())
