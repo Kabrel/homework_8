@@ -56,7 +56,7 @@ class DataBase:
 
     def __create_id(self) -> str:
         while True:
-            vac_id = str(randint(100, 5000))
+            vac_id = str(randint(1, 500000))
             if not self.__collection.find({'_id': vac_id}):
                 return vac_id
             else:
@@ -94,7 +94,7 @@ class DataBase:
         return self.__make_job_data(self.__current_id)
 
     def show_next(self):
-        if self.__current_id < self.__count - 1:
+        if self.__current_id < (self.__count - 1):
             self.__current_id += 1
         else:
             self.__current_id = 0
@@ -112,7 +112,7 @@ class DataBase:
             case 'by_salary':
                 return self.__search_by_salary(data)
             case 'by_name':
-                return self.__search_by_name(data)
+                return self.__search_by_names(data)
             case 'by_employer':
                 return self.__search_by_employer(data)
             case 'by_city':
@@ -124,20 +124,50 @@ class DataBase:
         val = int(value)
         search = {'$or': [{'salary_min': {'$gte': val}}, {'salary_max': {'$gte': val}}]}
         self.all_jobs = self.__collection.find(search)[:]
+        self.__count = self.__collection.count_documents(search)
         self.__current_id = 0
         return self.__make_job_data(self.__current_id)
 
-    def __search_by_name(self, value: str):
-        pass
+    def __search_by_names(self, value: str):
+        val = value
+        val_cap = value.capitalize()
+        val_low = value.lower()
+        val_up = value.upper()
+        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/', f'/{val_low}/', f'/{val_up}/']}}
+        self.all_jobs = self.__collection.find(search)[:]
+        self.__count = self.__collection.count_documents(search)
+        self.__current_id = 0
+        return self.__make_job_data(self.__current_id)
 
     def __search_by_employer(self, value: str):
-        pass
+        val = value
+        val_cap = value.capitalize()
+        val_low = value.lower()
+        val_up = value.upper()
+        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/', f'/{val_low}/', f'/{val_up}/']}}
+        self.all_jobs = self.__collection.find(search)[:]
+        self.__count = self.__collection.count_documents(search)
+        self.__current_id = 0
+        return self.__make_job_data(self.__current_id)
 
     def __search_by_city(self, value: str):
-        pass
+        val = value
+        val_cap = value.capitalize()
+        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/']}}
+        self.all_jobs = self.__collection.find(search)[:]
+        self.__count = self.__collection.count_documents(search)
+        self.__current_id = 0
+        return self.__make_job_data(self.__current_id)
 
     def __search_by_metro(self, value: str):
-        pass
+        val = value
+        val_cap = value.capitalize()
+        val_low = value.lower()
+        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/', f'/{val_low}/']}}
+        self.all_jobs = self.__collection.find(search)[:]
+        self.__count = self.__collection.count_documents(search)
+        self.__current_id = 0
+        return self.__make_job_data(self.__current_id)
 
     def import_db(self, f_name='jobs.json'):
         count = self.__collection.count_documents({})
@@ -150,6 +180,8 @@ class DataBase:
                 self.__collection.insert_one(file_data)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # debug
     db = DataBase(config.db_ip, config.db_port, config.db_name)
-    print(db.show_all())
+    print(db.search_data('by_salary', '150000'))
+    print(db.show_next())
+    print(db.show_prev())
