@@ -24,7 +24,10 @@ class DataBase:
         self.__db = self.__client[self.__name]
         self.__collection = self.__db.jobs
 
-    def add_vacancy_to_bd(self, *values):
+    def test(self, data):
+        return self.__collection.find_one({'_id': data})
+
+    def add_vacancy_to_bd(self, values):
         c_date = datetime.now()
         job_data = {'_id': self.__create_id(),
                     'name': values[0],
@@ -57,7 +60,7 @@ class DataBase:
     def __create_id(self) -> str:
         while True:
             vac_id = str(randint(1, 500000))
-            if not self.__collection.find({'_id': vac_id}):
+            if not self.__collection.find_one({'_id': vac_id}):
                 return vac_id
             else:
                 pass
@@ -131,10 +134,7 @@ class DataBase:
 
     def __search_by_names(self, value: str):
         val = value
-        val_cap = value.capitalize()
-        val_low = value.lower()
-        val_up = value.upper()
-        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/', f'/{val_low}/', f'/{val_up}/']}}
+        search = {'name': {'$regex': val, '$options': 'i'}}
         self.all_jobs = self.__collection.find(search)[:]
         self.__count = self.__collection.count_documents(search)
         self.__current_id = 0
@@ -142,10 +142,7 @@ class DataBase:
 
     def __search_by_employer(self, value: str):
         val = value
-        val_cap = value.capitalize()
-        val_low = value.lower()
-        val_up = value.upper()
-        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/', f'/{val_low}/', f'/{val_up}/']}}
+        search = {'employer': {'$regex': val, '$options': 'i'}}
         self.all_jobs = self.__collection.find(search)[:]
         self.__count = self.__collection.count_documents(search)
         self.__current_id = 0
@@ -153,8 +150,7 @@ class DataBase:
 
     def __search_by_city(self, value: str):
         val = value
-        val_cap = value.capitalize()
-        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/']}}
+        search = {'city': {'$regex': val, '$options': 'i'}}
         self.all_jobs = self.__collection.find(search)[:]
         self.__count = self.__collection.count_documents(search)
         self.__current_id = 0
@@ -162,9 +158,7 @@ class DataBase:
 
     def __search_by_metro(self, value: str):
         val = value
-        val_cap = value.capitalize()
-        val_low = value.lower()
-        search = {'name': {'$in': [f'/{val}/', f'/{val_cap}/', f'/{val_low}/']}}
+        search = {'metro': {'$regex': val, '$options': 'i'}}
         self.all_jobs = self.__collection.find(search)[:]
         self.__count = self.__collection.count_documents(search)
         self.__current_id = 0
@@ -183,6 +177,8 @@ class DataBase:
 
 if __name__ == '__main__':  # debug
     db = DataBase(config.db_ip, config.db_port, config.db_name)
-    print(db.search_data('by_salary', '15000'))
-    print(db.show_next())
-    print(db.show_prev())
+    #print(db.test('5000'))
+    #print(db.add_vacancy_to_bd(['test', 'test_empl', 'spb', 'metro1', '25000', '50000']))
+    #print(db.change_vacancy_in_bd('100587', {'name': 'test_edited',
+                                            # 'employer': 'emplo_edit',
+                                            # 'metro': 'metr'}))
