@@ -6,13 +6,49 @@ import config as c
 data_base = bd_func.DataBase(c.db_ip, c.db_port, c.db_name)
 
 
-def edit_data():
-    pass
+def ed(data):
+    data_split = data.split('\n')
+    d = dict(el.split(':', 1) for el in data_split)
+    ips = list(d.values())
+    idid = ips[-1]
+    datadata = ips[:-1]
+    choices = ['Name', 'Employer', 'City', 'Metro', 'Salary_min', 'Salary_max']
+    button = g.multenterbox('dad', c.prog_name, choices, datadata)
+    # set to db (button)
+    return main_menu()  # add func
 
 
-def delete_data(data):
-    if data:
-        data_base.delete_vacancy_from_bd()
+def edit_data(ret, data):
+    choices = ['Edit', '<-', 'Return', '->']
+    data_text = data_base.search_data(ret, data)
+    button = g.buttonbox(data_text, c.prog_name, choices)
+    job_id = data_text.split(':')[-1]
+
+    if button == 'Edit':
+        return ed(data_text)
+    elif button == '<-':
+        return show_all(button)
+    elif button == 'Return':
+        return main_menu()
+    elif button == '->':
+        return show_all(button)
+
+
+def delete_data(ret, data):
+    choices = ['Delete', '<-', 'Return', '->']
+    data_text = data_base.search_data(ret, data)
+    button = g.buttonbox(data_text, c.prog_name, choices)
+    job_id = data_text.split(':')[-1]
+
+    if button == 'Delete':
+        data_base.delete_vacancy_from_bd(job_id)
+        return main_menu()
+    elif button == '<-':
+        return show_all(button)
+    elif button == 'Return':
+        return main_menu()
+    elif button == '->':
+        return show_all(button)
 
 
 def show_all(ret=None, data=None):
@@ -42,7 +78,8 @@ def add_data():
     choices = ['Name', 'Employer', 'City', 'Metro', 'Salary_min', 'Salary_max']
     button = g.multenterbox('dad', c.prog_name, choices)
     # set to db (button)
-    return edit_menu() # add func
+    data_base.add_vacancy_to_bd(button)
+    return main_menu() # add func
 
 
 def edit_menu(successful=None):
@@ -55,8 +92,10 @@ def edit_menu(successful=None):
 
     if button == 'Add':
         add_data()
-    elif button in ['Delete', 'Edit']:
-        search_menu(button)
+    elif button == 'Delete':
+        search_menu(button, mode='Delete')
+    elif button == 'Edit':
+        search_menu(button, mode='Edit')
     elif button == 'Return':
         return main_menu()
 
@@ -92,12 +131,13 @@ def watch_menu():
 def enter_search_data(s_type, mode):
     lable = s_type
     data = g.enterbox(lable, c.prog_name)
+    print()
     if not mode:
         show_all(lable, data)
     elif mode == 'Edit':
-        pass
+        edit_data(lable, data)
     elif mode == 'Delete':
-        delete_data(data)
+        delete_data(lable, data)
 
 
 def search_menu(prev_menu, mode=None):
