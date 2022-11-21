@@ -173,7 +173,7 @@ class DataBase:
     def import_db(self, f_name='jobs.json'):
         count = self.__collection.count_documents({})
         if count <= 1:
-            with open(f_name) as file:
+            with open(f_name, encoding='utf-8') as file:
                 file_data = json.load(file)
             if isinstance(file_data, list):
                 self.__collection.insert_many(file_data)
