@@ -6,15 +6,48 @@ import config as c
 data_base = bd_func.DataBase(c.db_ip, c.db_port, c.db_name)
 
 
+def delete_menu(ret=None, data=None):
+
+    choices = ['Delete', '<-', 'Return', '->']
+    if not ret:
+        data_text = data_base.show_all()
+    elif ret == '<-':
+        data_text = data_base.show_prev()
+    elif ret == '->':
+        data_text = data_base.show_next()
+    elif ret in ['by_salary', 'by_name', 'by_employer', 'by_city', 'by_metro']:
+        data_text = data_base.search_data(ret, data)
+    else:
+        data_text = 'error'
+    job_id = data_text.split(':')[-1]
+    button = g.buttonbox(data_text, c.prog_name, choices)
+
+    if button == 'Delete':
+        data_base.delete_vacancy_from_bd(job_id)
+        return main_menu()
+    elif button == '<-':
+        return delete_menu(button)
+    elif button == 'Return':
+        return main_menu()
+    elif button == '->':
+        return delete_menu(button)
+
+
 def ed(data):
     data_split = data.split('\n')
     d = dict(el.split(':', 1) for el in data_split)
+    d.items()
     ips = list(d.values())
     idid = ips[-1]
-    datadata = ips[:-1]
+    datadata = ips[:-3]
+    salary_slice = [el for el in datadata[-1].split() if el.isdigit()]
+    datadata[-1] = salary_slice[0]
+    datadata.append(salary_slice[1])
     choices = ['Name', 'Employer', 'City', 'Metro', 'Salary_min', 'Salary_max']
-    button = g.multenterbox('dad', c.prog_name, choices, datadata)
-    # set to db (button)
+    button = g.multenterbox('Edit', c.prog_name, choices, datadata)
+    res = {key: val for key, val in map(lambda x: x.split(':'), data.split('\n'))}
+    print(res)
+    # data_base.change_vacancy_in_bd(idid, button)
     return main_menu()  # add func
 
 
@@ -26,23 +59,6 @@ def edit_data(ret, data):
 
     if button == 'Edit':
         return ed(data_text)
-    elif button == '<-':
-        return show_all(button)
-    elif button == 'Return':
-        return main_menu()
-    elif button == '->':
-        return show_all(button)
-
-
-def delete_data(ret, data):
-    choices = ['Delete', '<-', 'Return', '->']
-    data_text = data_base.search_data(ret, data)
-    button = g.buttonbox(data_text, c.prog_name, choices)
-    job_id = data_text.split(':')[-1]
-
-    if button == 'Delete':
-        data_base.delete_vacancy_from_bd(job_id)
-        return main_menu()
     elif button == '<-':
         return show_all(button)
     elif button == 'Return':
@@ -137,7 +153,7 @@ def enter_search_data(s_type, mode):
     elif mode == 'Edit':
         edit_data(lable, data)
     elif mode == 'Delete':
-        delete_data(lable, data)
+        delete_menu(lable, data)
 
 
 def search_menu(prev_menu, mode=None):
