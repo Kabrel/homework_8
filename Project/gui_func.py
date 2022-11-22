@@ -9,12 +9,17 @@ data_base = bd_func.DataBase(c.db_ip, c.db_port, c.db_name)
 def ed(data):
     data_split = data.split('\n')
     d = dict(el.split(':', 1) for el in data_split)
+    d.items()
     ips = list(d.values())
     idid = ips[-1]
-    datadata = ips[:-1]
+    datadata = ips[:-3]
+    salary_slice = [el for el in datadata[-1].split() if el.isdigit()]
+    datadata[-1] = salary_slice[0]
+    datadata.append(salary_slice[1])
     choices = ['Name', 'Employer', 'City', 'Metro', 'Salary_min', 'Salary_max']
-    button = g.multenterbox('dad', c.prog_name, choices, datadata)
-    # set to db (button)
+    button = g.multenterbox('Edit', c.prog_name, choices, datadata)
+    res = {}
+    # data_base.change_vacancy_in_bd(idid, button)
     return main_menu()  # add func
 
 
