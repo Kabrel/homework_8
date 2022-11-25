@@ -10,7 +10,7 @@ import config
 
 
 class DataBase:
-    def __init__(self, ip, port, name, **kwargs):
+    def __init__(self, ip, port, name):
         self.__ip_adr = ip
         self.__port = port
         self.__name = name
@@ -70,7 +70,10 @@ class DataBase:
         self.__count = self.__collection.count_documents({})
 
     def __make_job_data(self, j_id):
-        data = self.all_jobs[j_id]
+        try:
+            data = self.all_jobs[j_id]
+        except IndexError:
+            return 'Ничего не найдено'
         no_data = "Не указано"
         job_id = data["_id"]
         name = data["name"]

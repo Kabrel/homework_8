@@ -11,27 +11,37 @@ def ed(data):
     d = dict(el.split(':', 1) for el in data_split)
     ips = list(d.values())
     idid = ips[-1]
-    datadata = ips[:-1]
-    choices = ['Name', 'Employer', 'City', 'Metro', 'Salary_min', 'Salary_max']
-    button = g.multenterbox('dad', c.prog_name, choices, datadata)
+    data_data = ips[:-1]
+    choices = [i for i in d.keys() if i != 'id']
+    button = g.multenterbox('Введите правки', c.prog_name, choices, data_data)
+    data_edited = {key: value for key, value in zip(c.db_struct.values, button)}
     # set to db (button)
+    data_base.change_vacancy_in_bd(idid, data_edited)
     return main_menu()  # add func
 
 
-def edit_data(ret, data):
+def edit_data(ret=None, data=None):
     choices = ['Edit', '<-', 'Return', '->']
-    data_text = data_base.search_data(ret, data)
+    if not ret:
+        data_text = data_base.show_all()
+    elif ret == '<-':
+        data_text = data_base.show_prev()
+    elif ret == '->':
+        data_text = data_base.show_next()
+    elif ret in ['by_salary', 'by_name', 'by_employer', 'by_city', 'by_metro']:
+        data_text = data_base.search_data(ret, data)
+    else:
+        data_text = 'error'
     button = g.buttonbox(data_text, c.prog_name, choices)
     job_id = data_text.split(':')[-1]
-
     if button == 'Edit':
         return ed(data_text)
     elif button == '<-':
-        return show_all(button)
+        return edit_data(button)
     elif button == 'Return':
         return main_menu()
     elif button == '->':
-        return show_all(button)
+        return edit_data(button)
 
 
 def delete_data(ret, data):
